@@ -10,10 +10,10 @@ from starlette.exceptions import HTTPException as StarlettleHTTPException
 
 from nb_cli_plugin_webui import get_version
 
-from .config import Config, CONFIG_FILE_PATH
 from .logging import logger as log
 from .utils.scheduler import scheduler
 from .router import router as api_router
+from .config import CONFIG_FILE_PATH, Config
 from .handlers.process import ProcessManager
 from .handlers import driver_store_manager, plugin_store_manager, adapter_store_manager
 

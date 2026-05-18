@@ -5,10 +5,10 @@ import tomlkit
 from nb_cli.config import ConfigManager
 from dotenv import set_key, dotenv_values
 from tomlkit.toml_document import TOMLDocument
-from pydantic import BaseModel, RootModel, ValidationError
 from nb_cli.exceptions import ProjectNotFoundError
 from nb_cli.config import SimpleInfo as CliSimpleInfo
 from nb_cli.config.parser import CONFIG_FILE_ENCODING
+from pydantic import BaseModel, RootModel, ValidationError
 
 from nb_cli_plugin_webui.app.handlers import get_pkg_version
 from nb_cli_plugin_webui.app.utils.storage import get_data_file
@@ -70,7 +70,9 @@ class NoneBotProjectManager:
             file = self._load()
             file.root[self.project_id] = data
 
-        PROJECT_DATA_PATH.write_text(file.model_dump_json(), encoding=PROJECT_DATA_ENCODING)
+        PROJECT_DATA_PATH.write_text(
+            file.model_dump_json(), encoding=PROJECT_DATA_ENCODING
+        )
 
     def read(self) -> NoneBotProjectMeta:
         try:
@@ -127,7 +129,9 @@ class NoneBotProjectManager:
     def remove_project(self) -> None:
         data = self._load()
         data.root.pop(self.project_id)
-        PROJECT_DATA_PATH.write_text(data.model_dump_json(), encoding=PROJECT_DATA_ENCODING)
+        PROJECT_DATA_PATH.write_text(
+            data.model_dump_json(), encoding=PROJECT_DATA_ENCODING
+        )
 
     def modify_meta(self, k: str, v: Any) -> None:
         data = self.read()
