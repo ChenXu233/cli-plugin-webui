@@ -1,5 +1,6 @@
 import os
 import sys
+import shutil
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -145,8 +146,15 @@ async def dev():
         return
 
     click.secho(_("Starting frontend dev server..."), fg="green")
+    pnpm_path = shutil.which("pnpm")
+    if not pnpm_path:
+        click.secho(
+            _("pnpm not found. Please install it: npm install -- pnpm"),
+            fg="red",
+        )
+        return
     frontend_proc = subprocess.Popen(
-        ["pnpm", "dev"],
+        [pnpm_path, "dev"],
         cwd=frontend_path,
     )
 
