@@ -8,11 +8,15 @@ from starlette.responses import Response, JSONResponse
 from fastapi.staticfiles import StaticFiles as BaseStaticFiles
 from starlette.exceptions import HTTPException as StarlettleHTTPException
 
+from pydantic import SecretStr
+
 from nb_cli_plugin_webui import get_version
 
-from .config import Config
+from .config import Config, CONFIG_FILE_PATH, AppConfig, SpecialTypeJSONEncoder
 from .logging import logger as log
 from .utils.scheduler import scheduler
+from .utils.security import salt
+from .utils.string_utils import generate_complexity_string
 from .router import router as api_router
 from .handlers.process import ProcessManager
 from .handlers import driver_store_manager, plugin_store_manager, adapter_store_manager
@@ -53,7 +57,8 @@ class StaticFiles(BaseStaticFiles):
 
 
 frontend = FastAPI(openapi_url="")
-frontend.mount("/", StaticFiles(directory=STATIC_PATH, html=True), "NoneBot WebUI")
+if STATIC_PATH.exists():
+    frontend.mount("/", StaticFiles(directory=STATIC_PATH, html=True), "NoneBot WebUI")
 
 
 api = FastAPI(
@@ -78,6 +83,33 @@ app.mount("/", app=frontend)
 async def startup_event():
     if "WEBUI_BUILD" in os.environ:
         log.info("Running in docker.")
+
+    # 自动生成默认配置（开发模式）
+    if not CONFIG_FILE_PATH.exists() and "WEBUI_BUILD" not in os.environ:
+        _salt = salt.gen_salt()
+        _token = generate_complexity_string(use_digits=True, use_punctuation=True)
+        default_config = AppConfig(
+            base_dir=str(),
+            host="localhost",
+            port="12345",
+            secret_key=salt.get_token_hash(
+                generate_complexity_string(32, use_digits=True, use_punctuation=True)
+            ),
+            salt=SecretStr(_salt),
+            hashed_token=salt.get_token_hash(_salt + _token),
+        )
+        CONFIG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        CONFIG_FILE_PATH.write_text(default_config.to_json(), encoding="utf-8")
+        Config.load(CONFIG_FILE_PATH)
+        log.info("Generated default config for development.")
+        log.info(f"Access token: {_token}")
+    elif CONFIG_FILE_PATH.exists():
+        try:
+            Config.load(CONFIG_FILE_PATH)
+        except Exception:
+            log.warning("Config file is broken, using default values.")
+    else:
+        log.info("Running in docker, config will be read from environment.")
 
     log.info("Starting NoneBot CLI WebUI.")
     log.info(f"NoneBot CLI WebUI version: {get_version()}")
