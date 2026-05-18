@@ -7,12 +7,12 @@ const store = useCustomStore();
 </script>
 
 <template>
-  <div class="fixed lg:relative z-20 top-0 left-0 flex h-full overflow-hidden">
+  <div class="fixed lg:relative z-20 top-0 left-0 flex h-full">
     <Transition>
       <div
         v-show="store.menuShow"
         role="button"
-        class="h-screen w-screen bg-gray-500/50 hidden md:block lg:hidden"
+        class="h-screen w-screen bg-gray-500/50 block lg:hidden"
         @click="store.toggleMenuShow()"
       ></div>
     </Transition>
@@ -20,22 +20,31 @@ const store = useCustomStore();
     <div
       :class="{
         'fixed lg:relative top-0 left-0 h-full flex flex-col justify-between py-2 px-4 transition-all': true,
-        '-translate-x-full lg:translate-x-0 bg-base-200 lg:bg-base-200/50 shadow-md': true,
-        '!-translate-x-0': store.menuShow,
+        'overflow-visible lg:overflow-hidden': !store.menuMinify,
+        'lg:overflow-visible': store.menuMinify,
+        '-!translate-x-full lg:!translate-x-0 bg-base-200 lg:bg-base-200/50 shadow-md':
+          !store.menuShow,
+        '!-translate-x-0 bg-base-200 lg:bg-base-200/50 shadow-md': store.menuShow,
         'lg:!w-20': store.menuMinify,
       }"
       class="w-full md:w-1/2 lg:w-72"
     >
-      <div class="flex items-center justify-between relative">
+      <div
+        :class="{
+          'flex items-center relative': true,
+          'justify-between': !store.menuMinify,
+          'lg:justify-start lg:gap-5': store.menuMinify,
+        }"
+      >
         <div
           role="button"
-          class="flex items-center gap-2"
+          class="flex items-center gap-2 lg:gap-0.5"
           @click="(router.push('/'), store.toggleMenuShow())"
         >
-          <div class="indicator">
+          <div class="relative flex items-center justify-center">
             <span
               v-if="store.isDebug"
-              class="indicator-item indicator-middle indicator-center material-symbols-outlined"
+              class="absolute z-10 material-symbols-outlined text-2xl"
             >
               build
             </span>
@@ -46,21 +55,29 @@ const store = useCustomStore();
 
           <div
             class="shrink-0 text-xl font-semibold leading-7 normal-case"
-            :class="{ 'visible lg:invisible': store.menuMinify }"
+            :class="{ 'visible lg:hidden': store.menuMinify }"
           >
             NoneBot
           </div>
         </div>
 
-        <button
-          :class="{
-            'btn btn-sm btn-square btn-ghost flex items-center justify-center': true,
-            'block lg:hidden': true,
-          }"
-          @click="store.toggleMenuShow()"
-        >
-          <span class="material-symbols-outlined text-2xl"> arrow_back_ios_new </span>
-        </button>
+        <div class="flex items-center">
+          <button
+            class="btn btn-sm btn-square btn-ghost flex items-center justify-center lg:hidden"
+            @click="store.toggleMenuShow()"
+          >
+            <span class="material-symbols-outlined text-2xl"> arrow_back_ios_new </span>
+          </button>
+          <button
+            :class="{
+              'btn btn-sm btn-square btn-ghost hidden lg:flex items-center justify-center': true,
+              '-scale-100': store.menuMinify,
+            }"
+            @click="store.toggleMenuMinify()"
+          >
+            <span class="material-symbols-outlined text-2xl"> menu_open </span>
+          </button>
+        </div>
       </div>
 
       <SideMenu />

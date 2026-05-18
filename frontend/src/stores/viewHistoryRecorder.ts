@@ -9,10 +9,9 @@ export const useViewHistoryRecorderStore = defineStore("viewHistoryRecorder", ()
   const viewHistoryFromLocalStorage = localStorage.getItem("viewHistory");
   if (viewHistoryFromLocalStorage) {
     const storedHistory = JSON.parse(viewHistoryFromLocalStorage);
-    viewHistory.value = storedHistory.map((name: string) => {
-      const routeItem = defaultRoutes.find((route) => route.name === name);
-      return routeItem;
-    });
+    viewHistory.value = storedHistory
+      .map((name: string) => defaultRoutes.find((route) => route.name === name))
+      .filter((item: NavItem | undefined): item is NavItem => item !== undefined);
   }
 
   const _record = () => {
@@ -22,24 +21,17 @@ export const useViewHistoryRecorderStore = defineStore("viewHistoryRecorder", ()
     );
   };
 
-  const _remove = (name: string) => {
-    const data = viewHistory.value.map((item) => item.name);
-    data.filter((item) => item !== name);
-
-    localStorage.setItem("viewHistory", JSON.stringify(data));
-  };
-
   const record = (route: NavItem) => {
     viewHistory.value.push(route);
     _record();
   };
 
   const remove = (route: NavItem) => {
-    const index = viewHistory.value.findIndex((item: any) => item.name === route.name);
+    const index = viewHistory.value.findIndex((item) => item.name === route.name);
     if (index !== -1) {
       viewHistory.value.splice(index, 1);
     }
-    _remove(route.name);
+    _record();
   };
 
   const move = (from: number, to: number) => {
