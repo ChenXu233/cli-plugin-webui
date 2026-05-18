@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from nb_cli.config import ConfigManager
+from packaging.requirements import Requirement
 from nb_cli.cli.commands.project import ProjectContext
 from nb_cli.handlers import create_project, create_virtualenv
 
@@ -32,16 +33,52 @@ def create_nonebot_project(data: CreateProjectData) -> str:
     drivers = [driver.project_link for driver in data.drivers]
     adapters = [adapter.project_link for adapter in data.adapters]
 
+    # Build driver_package like "nonebot2[fastapi]>=2.5.0"
+    if data.drivers:
+        extras = ",".join(
+            x
+            for d in data.drivers
+            for x in (
+                d.project_link.split("[")[1].rstrip("]").split(",")
+                if "[" in d.project_link
+                else []
+            )
+        )
+        driver_package = (
+            f"nonebot2[{extras}]>={data.drivers[0].version}"
+            if extras
+            else f"nonebot2>={data.drivers[0].version}"
+        )
+    else:
+        driver_package = "nonebot2"
+
     context = ProjectContext()
     context.variables["project_name"] = project_name
+    context.variables["inplace"] = False
+    context.variables["environment"] = {}
+    context.variables["driver_package"] = driver_package
+    context.variables["devtools"] = ["pyright", "ruff"]
+    # drivers: {project_link: driver_dict} - 单个对象
     context.variables["drivers"] = json.dumps(
         {driver.project_link: driver.model_dump() for driver in data.drivers}
     )
-    context.packages.extend(drivers)
-    context.variables["adapters"] = json.dumps(
-        {adapter.project_link: adapter.model_dump() for adapter in data.adapters}
+    context.packages.extend(
+        [
+            Requirement(f"{driver.project_link}>={driver.version}")
+            for driver in data.drivers
+        ]
     )
-    context.packages.extend(adapters)
+    # adapters: {project_link: [adapter_dict, ...]} - 列表
+    _adapters: dict[str, list] = {}
+    for adapter in data.adapters:
+        _adapters.setdefault(adapter.project_link, []).append(adapter.model_dump())
+    context.variables["adapters"] = json.dumps(_adapters)
+    context.packages.extend(
+        [
+            Requirement(f"{adapter.project_link}>={adapter.version}")
+            for adapter in data.adapters
+        ]
+    )
 
     plugin_dirs = list()
     if not data.is_bootstrap:
@@ -90,7 +127,7 @@ def create_nonebot_project(data: CreateProjectData) -> str:
 
     async def install_dependencies():
         proc, _ = await call_pip_install(
-            ["nonebot2", *context.packages],
+            ["nonebot2", *[str(p) for p in context.packages]],
             ["-i", data.mirror_url],
             python_path=config_manager.python_path,
             log_storage=log,
@@ -198,7 +235,7 @@ async def add_nonebot_project(data: AddProjectData) -> str:
 
     async def install_dependencies():
         proc, _ = await call_pip_install(
-            ["nonebot2", *context.packages],
+            ["nonebot2", *[str(p) for p in context.packages]],
             ["-i", data.mirror_url],
             python_path=config_manager.python_path,
             log_storage=log,
