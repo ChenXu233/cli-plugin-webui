@@ -33,7 +33,7 @@ const recordView = (navItem: NavItem) => {
         }"
         @click="customStore.toggleMenuShow()"
       >
-        <span class="material-symbols-outlined absolute left-4 flex-shrink-0">{{
+        <span class="material-symbols-outlined absolute left-3 flex-shrink-0">{{
           navItem.googleIcon
         }}</span>
         <span
