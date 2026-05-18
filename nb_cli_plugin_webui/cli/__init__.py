@@ -1,4 +1,5 @@
 import os
+import sys
 import subprocess
 import webbrowser
 from pathlib import Path
@@ -48,6 +49,19 @@ async def _ensure_config():
     Config.load(CONFIG_FILE_PATH)
     click.secho(_("Generated default config."), fg="green")
     click.secho(_("Access token: {token}").format(token=_token), fg="green")
+
+
+def _check_dev_environment():
+    """检查是否在真实可开发环境"""
+    if not Path("pyproject.toml").exists():
+        click.secho(
+            _(
+                "Not in a project root directory. "
+                "Please run this command in a NoneBot project directory."
+            ),
+            fg="red",
+        )
+        sys.exit(1)
 
 
 @click.group(
@@ -119,6 +133,7 @@ async def run():
 @webui.command(help=_("Run frontend dev server with backend."))
 @run_async
 async def dev():
+    _check_dev_environment()
     await _ensure_config()
 
     Config.debug = 1
