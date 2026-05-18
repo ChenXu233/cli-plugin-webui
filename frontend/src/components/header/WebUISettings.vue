@@ -34,18 +34,6 @@ const drawerRef = ref<InstanceType<typeof DrawerItem> | null>()
 
         <div class="form-control">
           <label class="label cursor-pointer">
-            <span class="label-text">启用开发模式</span>
-            <input
-              type="checkbox"
-              class="toggle"
-              :checked="store.isDebug"
-              @click="store.toggleDebug"
-            />
-          </label>
-        </div>
-
-        <div class="form-control">
-          <label class="label cursor-pointer">
             <span class="label-text">是否即时搜索</span>
             <input
               type="checkbox"

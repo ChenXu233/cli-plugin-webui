@@ -17,7 +17,6 @@ export const initWebUI = async () => {
   app.mount('#app')
 
   const token = localStorage.getItem('token') || ''
-  const base = localStorage.getItem('debugUrl') || ''
 
   if (!token) {
     router.push('/login')
@@ -25,7 +24,7 @@ export const initWebUI = async () => {
   }
 
   client.setConfig({
-    baseUrl: base
+    baseUrl: ''
   })
   client.interceptors.request.use((request) => {
     request.headers.set('Authorization', `Bearer ${token}`)

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useStatusStore } from './StatusStore'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -10,23 +10,9 @@ export const useCustomStore = defineStore('customStore', () => {
 
   const statusStore = useStatusStore()
 
-  const isDebug = ref(false)
-
-  data = localStorage.getItem('isDebug')
-  if (data) {
-    isDebug.value = data === '1'
-    if (isDebug.value) statusStore.update(ID_OF_DEBUG_STATUS, 'badge-warning', '开发模式')
-  }
-
-  const toggleDebug = () => {
-    isDebug.value = !isDebug.value
-    localStorage.setItem('isDebug', isDebug.value ? '1' : '0')
-
-    if (isDebug.value) {
-      statusStore.update(ID_OF_DEBUG_STATUS, 'badge-warning', '开发模式')
-    } else {
-      statusStore.deleteStatus(ID_OF_DEBUG_STATUS)
-    }
+  const isDebug = computed(() => import.meta.env.DEV)
+  if (isDebug.value) {
+    statusStore.update(ID_OF_DEBUG_STATUS, 'badge-warning', '开发模式')
   }
 
   const toggleTheme = (theme: 'light' | 'dark') => {
@@ -88,7 +74,6 @@ export const useCustomStore = defineStore('customStore', () => {
 
   return {
     isDebug,
-    toggleDebug,
     isThemeFollowSystem,
     toggleThemeFollowSystem,
     currentTheme,
