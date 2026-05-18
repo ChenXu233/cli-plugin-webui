@@ -1,9 +1,11 @@
 import os
 import webbrowser
+import subprocess
+from pathlib import Path
 from typing import List, cast
 
 import click
-from pydantic import ValidationError
+from pydantic import SecretStr, ValidationError
 from nb_cli.i18n import _ as nb_cli_i18n
 from noneprompt import Choice, ListPrompt, ConfirmPrompt, CancelledError
 from nb_cli.cli import CLI_DEFAULT_STYLE, ClickAliasedGroup, run_sync, run_async
@@ -11,11 +13,41 @@ from nb_cli.cli import CLI_DEFAULT_STYLE, ClickAliasedGroup, run_sync, run_async
 from nb_cli_plugin_webui.i18n import _
 from nb_cli_plugin_webui.app.application import STATIC_PATH
 from nb_cli_plugin_webui.app.handlers.project import PROJECT_DATA_PATH
-from nb_cli_plugin_webui.app.config import CONFIG_FILE_PATH, Config, generate_config
+from nb_cli_plugin_webui.app.config import CONFIG_FILE_PATH, Config, AppConfig
+from nb_cli_plugin_webui.app.utils.security import salt
+from nb_cli_plugin_webui.app.utils.string_utils import generate_complexity_string
 
 from .token import token
 from .config import config
 from .docker import docker
+
+
+async def _ensure_config():
+    if CONFIG_FILE_PATH.exists():
+        try:
+            Config.load(CONFIG_FILE_PATH)
+        except ValidationError:
+            click.secho(_("Config file is broken, run `nb ui clear` to fix."), fg="red")
+            raise
+        return
+
+    _salt = salt.gen_salt()
+    _token = generate_complexity_string(use_digits=True, use_punctuation=True)
+    default_config = AppConfig(
+        base_dir=str(),
+        host="localhost",
+        port="12345",
+        secret_key=SecretStr(
+            generate_complexity_string(32, use_digits=True, use_punctuation=True)
+        ),
+        salt=SecretStr(_salt),
+        hashed_token=SecretStr(salt.get_token_hash(_salt + _token)),
+    )
+    CONFIG_FILE_PATH.parent.mkdir(parents=True, exist_ok=True)
+    CONFIG_FILE_PATH.write_text(default_config.to_json(), encoding="utf-8")
+    Config.load(CONFIG_FILE_PATH)
+    click.secho(_("Generated default config."), fg="green")
+    click.secho(_("Access token: {token}").format(token=_token), fg="green")
 
 
 @click.group(
@@ -24,32 +56,16 @@ from .docker import docker
 @click.pass_context
 @run_async
 async def webui(ctx: click.Context):
+    if ctx.invoked_subcommand is not None:
+        return
+
     if not STATIC_PATH.exists():
         click.secho(
             _("WebUI dist directory not found, please reinstall to fix."), fg="red"
         )
         return
 
-    if not CONFIG_FILE_PATH.exists():
-        if "WEBUI_BUILD" in os.environ:
-            click.secho(
-                _("Config not found in docker, run `nb ui docker` to fix."),
-                fg="yellow",
-            )
-            return
-
-        if not Config.check_necessary_config():
-            await generate_config()
-            return
-    else:
-        try:
-            Config.load(CONFIG_FILE_PATH)
-        except ValidationError:
-            click.secho(_("Config file is broken, run `nb ui clear` to fix."), fg="red")
-            return
-
-    if ctx.invoked_subcommand is not None:
-        return
+    await _ensure_config()
 
     command = cast(ClickAliasedGroup, ctx.command)
 
@@ -78,42 +94,51 @@ async def webui(ctx: click.Context):
 
 
 @webui.command(help=_("Run WebUI."))
-@click.option(
-    "-h",
-    "--host",
-    type=str,
-    show_default=True,
-    help=_("The host required to access NB CLI UI."),
-    default=None,
-)
-@click.option(
-    "-p",
-    "--port",
-    type=int,
-    show_default=True,
-    help=_("The port required to access NB CLI UI."),
-    default=None,
-)
 @run_async
-async def run(host: str, port: int):
+async def run():
+    if not STATIC_PATH.exists():
+        click.secho(
+            _("WebUI dist directory not found, please reinstall to fix."), fg="red"
+        )
+        return
+
+    await _ensure_config()
+
     from nb_cli_plugin_webui import server
 
-    if not host:
-        host = Config.host
-    if not port:
-        port = int(Config.port)
-    else:
-        if port < 1024 or port > 49151:
-            click.secho(
-                _("Port must be between 1024 and 49151. (Recommend: > 10000)"), fg="red"
-            )
-            return
+    host = Config.host
+    port = int(Config.port)
 
     try:
         webbrowser.open(f"http://{host}:{port}/")
     except webbrowser.Error:
         pass
     await server.run_server(host, port)
+
+
+@webui.command(help=_("Run frontend dev server with backend."))
+@run_async
+async def dev():
+    await _ensure_config()
+
+    frontend_path = Path(__file__).parent.parent.parent / "frontend"
+    if not frontend_path.exists():
+        click.secho(_("Frontend directory not found."), fg="red")
+        return
+
+    click.secho(_("Starting frontend dev server..."), fg="green")
+    frontend_proc = subprocess.Popen(
+        ["pnpm", "dev"],
+        cwd=frontend_path,
+    )
+
+    click.secho(_("Starting backend server..."), fg="green")
+    try:
+        from nb_cli_plugin_webui import server
+        await server.run_server(Config.host, int(Config.port))
+    finally:
+        frontend_proc.terminate()
+        frontend_proc.wait()
 
 
 @webui.command(help=_("Clear WebUI data."))
