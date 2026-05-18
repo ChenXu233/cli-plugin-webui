@@ -23,23 +23,15 @@ LOG_CONFIG = {
 }
 
 
-async def run_server(host: str, port: int):
+async def run_server(host: str, port: int, reload: bool = False):
     server = uvicorn.Server(
         uvicorn.Config(
             "nb_cli_plugin_webui.app:app",
             host=host,
             port=port,
             log_config=LOG_CONFIG,
+            reload=reload,
+            reload_dirs=["nb_cli_plugin_webui"] if reload else None,
         )
     )
     return await server.serve()
-
-
-if __name__ == "__main__":
-    uvicorn.run(
-        "nb_cli_plugin_webui.app:app",
-        host="localhost",
-        port=12345,
-        reload=True,
-        reload_dirs=["nb_cli_plugin_webui"],
-    )

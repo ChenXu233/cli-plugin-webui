@@ -1,20 +1,20 @@
 import os
-import webbrowser
 import subprocess
+import webbrowser
 from pathlib import Path
 from typing import List, cast
 
 import click
-from pydantic import SecretStr, ValidationError
 from nb_cli.i18n import _ as nb_cli_i18n
+from pydantic import SecretStr, ValidationError
 from noneprompt import Choice, ListPrompt, ConfirmPrompt, CancelledError
 from nb_cli.cli import CLI_DEFAULT_STYLE, ClickAliasedGroup, run_sync, run_async
 
 from nb_cli_plugin_webui.i18n import _
+from nb_cli_plugin_webui.app.utils.security import salt
 from nb_cli_plugin_webui.app.application import STATIC_PATH
 from nb_cli_plugin_webui.app.handlers.project import PROJECT_DATA_PATH
 from nb_cli_plugin_webui.app.config import CONFIG_FILE_PATH, Config, AppConfig
-from nb_cli_plugin_webui.app.utils.security import salt
 from nb_cli_plugin_webui.app.utils.string_utils import generate_complexity_string
 
 from .token import token
@@ -121,6 +121,9 @@ async def run():
 async def dev():
     await _ensure_config()
 
+    Config.debug = 1
+    Config.enable_api_document = True
+
     frontend_path = Path(__file__).parent.parent.parent / "frontend"
     if not frontend_path.exists():
         click.secho(_("Frontend directory not found."), fg="red")
@@ -135,7 +138,8 @@ async def dev():
     click.secho(_("Starting backend server..."), fg="green")
     try:
         from nb_cli_plugin_webui import server
-        await server.run_server(Config.host, int(Config.port))
+
+        await server.run_server(Config.host, int(Config.port), reload=True)
     finally:
         frontend_proc.terminate()
         frontend_proc.wait()
