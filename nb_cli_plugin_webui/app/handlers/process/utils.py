@@ -16,20 +16,25 @@ class ProcessFuncWithLog:
     async def _err_parse(
         self, err: Exception, additional_err_msg: Optional[str] = None
     ) -> None:
-        log_model = CustomLog(message=str(err))
-        await self.log.add_log(log_model)
+        tb = traceback.extract_tb(err.__traceback__)
+        # 只保留项目代码的帧，过滤 asyncio/starlette 等内部帧
+        project_frames = [f for f in tb if "nb_cli_plugin_webui" in f.filename]
+        frames = project_frames if project_frames else tb[-3:]
 
-        traceback_info = traceback.format_exc()
-        log_model = CustomLog(message=traceback_info)
-        await self.log.add_log(log_model)
+        lines = ["Traceback (most recent call last):"]
+        for frame in frames:
+            lines.append(
+                f'  File "{frame.filename}", line {frame.lineno}, in {frame.name}'
+            )
+            if frame.line:
+                lines.append(f"    {frame.line}")
+        lines.append(f"{type(err).__name__}: {err}")
+        await self.log.add_log(CustomLog(message="\n".join(lines)))
 
         if additional_err_msg:
-            log_model = CustomLog(message=additional_err_msg)
-            await self.log.add_log(log_model)
+            await self.log.add_log(CustomLog(message=additional_err_msg))
 
-        log_model = CustomLog(message="❌ Failed!")
-        await self.log.add_log(log_model)
-
+        await self.log.add_log(CustomLog(message="❌ Failed!"))
         self.queue.clear()
 
     def add(
