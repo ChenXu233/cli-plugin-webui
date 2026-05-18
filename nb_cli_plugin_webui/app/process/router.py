@@ -100,7 +100,7 @@ async def get_process_log(websocket: WebSocket):
             log_listeners.pop(websocket)
 
     async def log_listener(log: ProcessLog):
-        await websocket.send_text(log.json())
+        await websocket.send_text(log.model_dump_json())
 
     async def receive_listener(recv: dict):
         nonlocal log_storage

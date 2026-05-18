@@ -35,11 +35,11 @@ def create_nonebot_project(data: CreateProjectData) -> str:
     context = ProjectContext()
     context.variables["project_name"] = project_name
     context.variables["drivers"] = json.dumps(
-        {driver.project_link: driver.dict() for driver in data.drivers}
+        {driver.project_link: driver.model_dump() for driver in data.drivers}
     )
     context.packages.extend(drivers)
     context.variables["adapters"] = json.dumps(
-        {adapter.project_link: adapter.dict() for adapter in data.adapters}
+        {adapter.project_link: adapter.model_dump() for adapter in data.adapters}
     )
     context.packages.extend(adapters)
 
@@ -103,10 +103,10 @@ def create_nonebot_project(data: CreateProjectData) -> str:
 
     async def add_project_info():
         _adapters: List[ModuleInfo] = [
-            ModuleInfo.parse_obj(adapter.dict()) for adapter in data.adapters
+            ModuleInfo.model_validate(adapter.model_dump()) for adapter in data.adapters
         ]
         _drivers: List[ModuleInfo] = [
-            ModuleInfo.parse_obj(driver.dict()) for driver in data.drivers
+            ModuleInfo.model_validate(driver.model_dump()) for driver in data.drivers
         ]
 
         project_id = generate_complexity_string(6)
@@ -154,7 +154,7 @@ async def add_nonebot_project(data: AddProjectData) -> str:
     context = ProjectContext()
     context.variables["project_name"] = project_name
     context.variables["adapters"] = json.dumps(
-        {adapter.project_link: adapter.dict() for adapter in installed_adapters}
+        {adapter.project_link: adapter.model_dump() for adapter in installed_adapters}
     )
     context.packages.extend([adapter.project_link for adapter in installed_adapters])
 

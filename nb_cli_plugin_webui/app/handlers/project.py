@@ -5,7 +5,7 @@ import tomlkit
 from nb_cli.config import ConfigManager
 from dotenv import set_key, dotenv_values
 from tomlkit.toml_document import TOMLDocument
-from pydantic import BaseModel, ValidationError
+from pydantic import BaseModel, RootModel, ValidationError
 from nb_cli.exceptions import ProjectNotFoundError
 from nb_cli.config import SimpleInfo as CliSimpleInfo
 from nb_cli.config.parser import CONFIG_FILE_ENCODING
@@ -26,8 +26,8 @@ PROJECT_DATA_PATH = get_data_file(PROJECT_DATA_FILE)
 PROJECT_DATA_ENCODING = "utf-8"
 
 
-class NoneBotProjectList(BaseModel):
-    __root__: Dict[str, NoneBotProjectMeta]
+class NoneBotProjectList(RootModel):
+    root: Dict[str, NoneBotProjectMeta]
 
 
 class NoneBotProjectManager:
@@ -51,7 +51,9 @@ class NoneBotProjectManager:
     @classmethod
     def _load(cls) -> NoneBotProjectList:
         try:
-            return NoneBotProjectList.parse_file(PROJECT_DATA_PATH, encoding="utf-8")
+            return NoneBotProjectList.model_validate_json(
+                PROJECT_DATA_PATH.read_text(PROJECT_DATA_ENCODING)
+            )
         except FileNotFoundError as err:
             raise err
         except ValidationError as err:
@@ -59,21 +61,21 @@ class NoneBotProjectManager:
 
     @classmethod
     def get_project(cls) -> Dict[str, NoneBotProjectMeta]:
-        return cls._load().__root__
+        return cls._load().root
 
     def store(self, data: NoneBotProjectMeta) -> None:
         if not PROJECT_DATA_PATH.exists():
-            file = NoneBotProjectList(__root__={self.project_id: data})
+            file = NoneBotProjectList(root={self.project_id: data})
         else:
             file = self._load()
-            file.__root__[self.project_id] = data
+            file.root[self.project_id] = data
 
-        PROJECT_DATA_PATH.write_text(file.json(), encoding="utf-8")
+        PROJECT_DATA_PATH.write_text(file.model_dump_json(), encoding=PROJECT_DATA_ENCODING)
 
     def read(self) -> NoneBotProjectMeta:
         try:
             load = self._load()
-            data = load.__root__
+            data = load.root
         except FileNotFoundError:
             raise FileNotFoundError(f"{PROJECT_DATA_FILE} Not found")
         info = data.get(self.project_id)
@@ -124,8 +126,8 @@ class NoneBotProjectManager:
 
     def remove_project(self) -> None:
         data = self._load()
-        data.__root__.pop(self.project_id)
-        PROJECT_DATA_PATH.write_text(data.json(), encoding="utf-8")
+        data.root.pop(self.project_id)
+        PROJECT_DATA_PATH.write_text(data.model_dump_json(), encoding=PROJECT_DATA_ENCODING)
 
     def modify_meta(self, k: str, v: Any) -> None:
         data = self.read()
@@ -176,7 +178,7 @@ class NoneBotProjectManager:
             pkg_version = await get_pkg_version(plugin, self.config_manager.python_path)
             plugin_metadata["version"] = pkg_version
 
-            metadata = Plugin.parse_obj(plugin_metadata)
+            metadata = Plugin.model_validate(plugin_metadata)
             if metadata.module_name == "unknown":
                 metadata.module_name = plugin
 

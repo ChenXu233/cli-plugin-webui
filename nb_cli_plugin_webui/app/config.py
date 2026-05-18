@@ -75,7 +75,12 @@ class AppConfig(BaseModel):
         return self.log_level.value
 
     def to_json(self) -> str:
-        return json.dumps(self.dict(), cls=SpecialTypeJSONEncoder)
+        return json.dumps(
+            self.model_dump(mode="python"),
+            cls=SpecialTypeJSONEncoder,
+            indent=2,
+            ensure_ascii=False,
+        )
 
     def reset_token(self, token: str) -> None:
         self.salt = SecretStr(salt.gen_salt())
@@ -88,13 +93,12 @@ class AppConfig(BaseModel):
             self.base_dir and self.secret_key and self.hashed_token and self.salt
         )
 
-    def get_description(self, field_name: str) -> str:
-        return self.__fields__[field_name].field_info.description
-
+    def get_description(self, field_name: str) -> str | None:
+        return self.__class__.model_fields[field_name].description
 
 class ConfigParser(AppConfig):
     def load(self, path: Path):
-        new_conf = self.parse_file(path)
+        new_conf = AppConfig.model_validate_json(path.read_text(encoding="utf-8"))
         self.__dict__.update(new_conf.__dict__)
 
     def store(self, path: Path):
