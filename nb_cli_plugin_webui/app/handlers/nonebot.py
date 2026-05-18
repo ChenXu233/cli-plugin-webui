@@ -1,7 +1,7 @@
 import re
 import json
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from nb_cli.handlers import get_default_python
 
@@ -37,7 +37,8 @@ async def get_nonebot_loaded_plugins(
         python_path, await t.render_async(toml_path=config_file), cwd
     )
 
-    return _findall(r"nonebot_plugins:\s*(.*)", raw_content).split(",")
+    matched = _findall(r"nonebot_plugins:\s*(.*)", raw_content)
+    return matched.split(",") if matched else []
 
 
 async def get_nonebot_loaded_config(
@@ -92,7 +93,7 @@ async def get_nonebot_plugin_config_schema(
 
 async def get_nonebot_plugin_metadata(
     plugin: str, cwd: Optional[Path] = None, python_path: Optional[str] = None
-):
+) -> Optional[Dict]:
     if python_path is None:
         python_path = await get_default_python()
 

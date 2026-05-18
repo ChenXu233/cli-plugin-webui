@@ -172,6 +172,8 @@ class NoneBotProjectManager:
             plugin_metadata = await get_nonebot_plugin_metadata(
                 plugin, cwd, self.config_manager.python_path
             )
+            if plugin_metadata is None:
+                continue
             plugin_config_schema = await get_nonebot_plugin_config_schema(
                 plugin, cwd, self.config_manager.python_path
             )
