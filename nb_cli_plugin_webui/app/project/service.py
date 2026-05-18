@@ -60,7 +60,7 @@ def create_nonebot_project(data: CreateProjectData) -> str:
     context.variables["project_name"] = project_name
     context.variables["inplace"] = False
     context.variables["environment"] = {}
-    context.variables["driver_package"] = driver_package
+    context.variables["driver_package"] = f'"{driver_package}"'
     context.variables["devtools"] = ["pyright", "ruff"]
     # drivers: {project_link: driver_dict} - 单个对象
     context.variables["drivers"] = json.dumps(
@@ -224,7 +224,7 @@ async def add_nonebot_project(data: AddProjectData) -> str:
     context.variables["project_name"] = project_name
     context.variables["inplace"] = False
     context.variables["environment"] = {}
-    context.variables["driver_package"] = driver_package
+    context.variables["driver_package"] = f'"{driver_package}"'
     context.variables["devtools"] = ["pyright", "ruff"]
     # drivers: {project_link: driver_dict} - 单个对象
     context.variables["drivers"] = json.dumps(
