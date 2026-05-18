@@ -15,6 +15,16 @@ def _findall(pattern, string) -> str:
     return matches[0] if matches else str()
 
 
+def _parse_json_from_output(pattern: str, raw_content: str, context: str = ""):
+    matched = _findall(pattern, raw_content)
+    if not matched:
+        raise RuntimeError(
+            f"Failed to parse output{f' for {context}' if context else ''}. "
+            f"Script output: {raw_content[:200]!r}"
+        )
+    return json.loads(matched)
+
+
 async def get_nonebot_loaded_plugins(
     config_file: Path, python_path: Optional[str] = None
 ) -> List[str]:
@@ -39,7 +49,9 @@ async def get_nonebot_loaded_config(
     t = templates.get_template("scripts/nonebot/get_nonebot_loaded_config.py.jinja")
     raw_content = await run_python_script(python_path, await t.render_async(), cwd)
 
-    return json.loads(_findall(r"nonebot_loaded_config:\s*(.*)", raw_content))
+    return _parse_json_from_output(
+        r"nonebot_loaded_config:\s*(.*)", raw_content, "loaded config"
+    )
 
 
 async def get_nonebot_self_config_schema(
@@ -53,7 +65,9 @@ async def get_nonebot_self_config_schema(
     )
     raw_content = await run_python_script(python_path, await t.render_async(), cwd)
 
-    return json.loads(_findall(r"nonebot_self_config_schema:\s*(.*)", raw_content))
+    return _parse_json_from_output(
+        r"nonebot_self_config_schema:\s*(.*)", raw_content, "self config schema"
+    )
 
 
 async def get_nonebot_plugin_config_schema(
@@ -69,7 +83,11 @@ async def get_nonebot_plugin_config_schema(
         python_path, await t.render_async(plugin=plugin), cwd
     )
 
-    return json.loads(_findall(r"nonebot_plugin_config_schema:\s*(.*)", raw_content))
+    return _parse_json_from_output(
+        r"nonebot_plugin_config_schema:\s*(.*)",
+        raw_content,
+        f"plugin config schema: {plugin}",
+    )
 
 
 async def get_nonebot_plugin_metadata(
@@ -83,4 +101,6 @@ async def get_nonebot_plugin_metadata(
         python_path, await t.render_async(plugin=plugin), cwd
     )
 
-    return json.loads(_findall(r"nonebot_plugin_metadata:\s*(.*)", raw_content))
+    return _parse_json_from_output(
+        r"nonebot_plugin_metadata:\s*(.*)", raw_content, f"plugin metadata: {plugin}"
+    )
