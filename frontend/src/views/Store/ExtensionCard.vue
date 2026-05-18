@@ -9,10 +9,12 @@
 >
 import {
   StoreService,
+  ProcessService,
   type nb_cli_plugin_webui__app__models__base__ModuleInfo,
   type nb_cli_plugin_webui__app__models__store__Plugin,
 } from "@/client/api";
 import type { PypiInfo } from "@/views/Store/types";
+import { sleep } from "@/client/utils";
 import { useFetch } from "@vueuse/core";
 import { computed, ref } from "vue";
 import { useSearchStore } from "./client";
@@ -33,7 +35,10 @@ const extensionCardModal = ref<HTMLDialogElement>(),
   pypiData = ref<PypiInfo>(),
   logViewModal = ref<InstanceType<typeof LogView> | null>(),
   installLogKey = ref(""),
-  extensionUninstallConfirmModal = ref<HTMLDialogElement>();
+  extensionUninstallConfirmModal = ref<HTMLDialogElement>(),
+  restartConfirmModal = ref<HTMLDialogElement>();
+
+const isRestarting = ref(false);
 
 const open = async () => {
   extensionCardModal.value?.showModal();
@@ -118,6 +123,46 @@ const isRetry = () => {
 
 const isFinished = async () => {
   await store.updateData(nonebotStore.selectedBot!.project_id, false);
+
+  if (nonebotStore.selectedBot?.is_running) {
+    restartConfirmModal.value?.showModal();
+  }
+};
+
+const restartBot = async () => {
+  if (!nonebotStore.selectedBot) return;
+
+  isRestarting.value = true;
+
+  const { error: stopError } = await ProcessService.stopProcessV1ProcessStopPost({
+    query: {
+      project_id: nonebotStore.selectedBot.project_id,
+    },
+  });
+
+  if (stopError) {
+    toast.add("error", `停止失败, 原因：${stopError.detail?.toString()}`, "", 5000);
+    isRestarting.value = false;
+    return;
+  }
+
+  await sleep(1000);
+
+  const { error: runError } = await ProcessService.runProcessV1ProcessRunPost({
+    query: {
+      project_id: nonebotStore.selectedBot.project_id,
+    },
+  });
+
+  if (runError) {
+    toast.add("error", `启动失败, 原因：${runError.detail?.toString()}`, "", 5000);
+  } else {
+    toast.add("success", "实例已重启", "", 5000);
+    await nonebotStore.loadBots();
+  }
+
+  isRestarting.value = false;
+  restartConfirmModal.value?.close();
 };
 
 const getUpdateTime = computed(() => {
@@ -161,6 +206,29 @@ const getUpdateTime = computed(() => {
         <button class="btn btn-sm" @click="uninstallModule(props.data)">确定</button>
         <button class="btn btn-sm" @click="extensionUninstallConfirmModal?.close()">
           取消
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <dialog ref="restartConfirmModal" class="modal">
+    <div class="modal-box rounded-lg flex flex-col gap-4">
+      <h3 class="font-semibold text-lg">重启实例</h3>
+      <p>插件安装完成，需要重启实例以应用更改。是否立即重启？</p>
+
+      <div class="flex items-center gap-2">
+        <button class="btn btn-sm" @click="restartConfirmModal?.close()">稍后重启</button>
+
+        <div class="w-full"></div>
+
+        <button
+          :class="{
+            'btn btn-sm btn-primary text-base-100': true,
+            'btn-disabled': isRestarting,
+          }"
+          @click="restartBot()"
+        >
+          {{ isRestarting ? "重启中..." : "立即重启" }}
         </button>
       </div>
     </div>
