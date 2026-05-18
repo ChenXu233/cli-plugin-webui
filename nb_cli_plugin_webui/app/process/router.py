@@ -1,3 +1,4 @@
+import asyncio
 from typing import Dict, List, Callable, Optional, Awaitable
 
 from fastapi.websockets import WebSocketState
@@ -39,7 +40,7 @@ async def run_process(
     if not project_meta.drivers:
         raise DriverNotFound()
 
-    await run_nonebot_project(project)
+    asyncio.create_task(run_nonebot_project(project))
     return GenericResponse(detail="success")
 
 

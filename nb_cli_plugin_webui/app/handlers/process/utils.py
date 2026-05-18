@@ -50,7 +50,7 @@ class ProcessFuncWithLog:
         for func, args, kwargs in self.queue:
             try:
                 hints = get_type_hints(func)
-                if hints.get("return") == bool:
+                if hints.get("return") is bool:
                     if asyncio.iscoroutinefunction(func):
                         _ = await func(*args, **kwargs)
                     else:
