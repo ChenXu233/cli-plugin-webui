@@ -70,6 +70,10 @@ extra_standard_library = ["typing_extensions"]
 [tool.pycln]
 path = "."
 
+[tool.pdm.scripts]
+dev-backend = "python -m nb_cli_plugin_webui.server"
+dev-frontend = { cmd = "pnpm dev", working_dir = "frontend" }
+
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"

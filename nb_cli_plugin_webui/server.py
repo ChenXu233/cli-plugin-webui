@@ -33,3 +33,13 @@ async def run_server(host: str, port: int):
         )
     )
     return await server.serve()
+
+
+if __name__ == "__main__":
+    uvicorn.run(
+        "nb_cli_plugin_webui.app:app",
+        host="localhost",
+        port=12345,
+        reload=True,
+        reload_dirs=["nb_cli_plugin_webui"],
+    )

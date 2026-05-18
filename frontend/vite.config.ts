@@ -11,6 +11,14 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     }
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:12345',
+        changeOrigin: true
+      }
+    }
+  },
   build: {
     outDir: '../nb_cli_plugin_webui/dist'
   }
