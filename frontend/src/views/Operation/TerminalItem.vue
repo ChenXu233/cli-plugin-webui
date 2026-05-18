@@ -44,6 +44,10 @@ const { status, data, close, open, send } = useWebSocket<ProcessLog>(
   generateURLForWebUI("/v1/process/log/ws", true),
   {
     immediate: false,
+    autoReconnect: {
+      retries: 10,
+      delay: 3000,
+    },
     onConnected(ws) {
       const token = localStorage.getItem("token") ?? "";
       ws.send(token);
@@ -173,7 +177,9 @@ const retry = () => {
             {{ item.time }}
           </th>
           <td v-if="item.level" class="flex">{{ item.level }}</td>
-          <td :class="{ flex: true, 'pl-0 text-success': !item.time }">
+          <td
+            :class="{ 'flex whitespace-pre-wrap': true, 'pl-0 text-success': !item.time }"
+          >
             {{ item.message }}
           </td>
         </tr>

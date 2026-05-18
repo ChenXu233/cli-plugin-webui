@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import { StoreService, type Adapter } from "@/client/api";
 import ItemSelect from "./ItemSelect.vue";
 import { useCreateBotStore } from ".";
@@ -7,19 +7,23 @@ import { useCreateBotStore } from ".";
 const store = useCreateBotStore();
 
 const adapterList = ref<Adapter[]>([]);
+const isLoading = ref(true);
 
-const { data } = await StoreService.getNonebotStoreItemsV1StoreNonebotListGet({
-  query: {
-    module_type: "adapter",
-    page: 0,
-    is_search: false,
-    show_all: true,
-  },
+onMounted(async () => {
+  const { data } = await StoreService.getNonebotStoreItemsV1StoreNonebotListGet({
+    query: {
+      module_type: "adapter",
+      page: 0,
+      is_search: false,
+      show_all: true,
+    },
+  });
+
+  if (data) {
+    adapterList.value = data.detail;
+  }
+  isLoading.value = false;
 });
-
-if (data) {
-  adapterList.value = data.detail;
-}
 </script>
 
 <template>

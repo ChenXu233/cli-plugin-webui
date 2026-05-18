@@ -33,6 +33,10 @@ const { status, data, close, open } = useWebSocket<ProcessLog>(
   generateURLForWebUI("/v1/process/log/ws", true),
   {
     immediate: false,
+    autoReconnect: {
+      retries: 10,
+      delay: 3000,
+    },
     onConnected(ws) {
       const token = localStorage.getItem("token") ?? "";
       ws.send(token);
@@ -109,7 +113,7 @@ watch(
                 {{ log.time }}
               </th>
               <td v-if="log.level" class="flex">{{ log.level }}</td>
-              <td class="flex">{{ log.message }}</td>
+              <td class="flex whitespace-pre-wrap">{{ log.message }}</td>
             </tr>
           </tbody>
         </table>

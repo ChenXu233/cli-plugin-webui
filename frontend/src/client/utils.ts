@@ -25,8 +25,15 @@ export const limitContentShow = (content: string, limit: number) => {
 
 export const generateURLForWebUI = (path: string, isWebsocket = false) => {
   const base = client.getConfig().baseUrl!;
-  const protocol = isWebsocket ? "ws" : "http";
-  return `${protocol}://${base}${path}`;
+  const protocol = isWebsocket
+    ? window.location.protocol === "https:"
+      ? "wss"
+      : "ws"
+    : window.location.protocol === "https:"
+      ? "https"
+      : "http";
+  const host = window.location.host;
+  return `${protocol}://${host}${base}${path}`;
 };
 
 export const sleep = (ms: number) => {

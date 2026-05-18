@@ -16,16 +16,16 @@ export const initWebUI = async () => {
   installVuePlugins(app);
   app.mount("#app");
 
+  client.setConfig({
+    baseUrl: "/api",
+  });
+
   const token = localStorage.getItem("token") || "";
 
   if (!token) {
     router.push("/login");
     return;
   }
-
-  client.setConfig({
-    baseUrl: "",
-  });
   client.interceptors.request.use((request) => {
     request.headers.set("Authorization", `Bearer ${token}`);
     return request;

@@ -22,6 +22,7 @@ export const useNoneBotStore = defineStore("nonebotStore", () => {
   }
 
   const getExtendedBotsList = (): NoneBotProjectMeta[] => {
+    if (!bots.value) return [];
     return Object.keys(bots.value).map((projectID) => ({
       projectID,
       ...bots.value[projectID],

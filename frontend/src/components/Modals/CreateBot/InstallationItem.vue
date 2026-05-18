@@ -61,6 +61,10 @@ const { status, data, close, open } = useWebSocket<ProcessLog>(
   generateURLForWebUI("/v1/process/log/ws", true),
   {
     immediate: false,
+    autoReconnect: {
+      retries: 10,
+      delay: 3000,
+    },
     onConnected(ws) {
       const token = localStorage.getItem("token") ?? "";
       ws.send(token);
@@ -161,7 +165,7 @@ onUnmounted(() => {
               {{ item.time }}
             </th>
             <td class="flex">{{ item.level }}</td>
-            <td class="flex">{{ item.message }}</td>
+            <td class="flex whitespace-pre-wrap">{{ item.message }}</td>
           </tr>
         </tbody>
       </table>

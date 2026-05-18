@@ -1,25 +1,29 @@
 <script setup lang="ts">
 import { StoreService, type Driver } from "@/client/api";
-import { ref } from "vue";
+import { onMounted, ref } from "vue";
 import ItemSelect from "./ItemSelect.vue";
 import { useCreateBotStore } from ".";
 
 const store = useCreateBotStore();
 
 const driverList = ref<Driver[]>([]);
+const isLoading = ref(true);
 
-const { data } = await StoreService.getNonebotStoreItemsV1StoreNonebotListGet({
-  query: {
-    module_type: "driver",
-    page: 0,
-    is_search: false,
-    show_all: true,
-  },
+onMounted(async () => {
+  const { data } = await StoreService.getNonebotStoreItemsV1StoreNonebotListGet({
+    query: {
+      module_type: "driver",
+      page: 0,
+      is_search: false,
+      show_all: true,
+    },
+  });
+
+  if (data) {
+    driverList.value = data.detail;
+  }
+  isLoading.value = false;
 });
-
-if (data) {
-  driverList.value = data.detail;
-}
 </script>
 
 <template>

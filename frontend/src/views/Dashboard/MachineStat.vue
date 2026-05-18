@@ -35,6 +35,10 @@ const { data, close, open, send } = useWebSocket<StatusInfo>(
   generateURLForWebUI("/v1/status/ws", true),
   {
     immediate: false,
+    autoReconnect: {
+      retries: 10,
+      delay: 3000,
+    },
     onConnected(ws) {
       const token = localStorage.getItem("token") ?? "";
       ws.send(token);
