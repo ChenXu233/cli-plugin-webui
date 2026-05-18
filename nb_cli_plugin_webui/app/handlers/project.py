@@ -63,6 +63,18 @@ class NoneBotProjectManager:
     def get_project(cls) -> Dict[str, NoneBotProjectMeta]:
         return cls._load().root
 
+    @classmethod
+    def get_project_by_dir(cls, project_dir: str) -> NoneBotProjectMeta | None:
+        try:
+            projects = cls.get_project()
+        except (FileNotFoundError, ValidationError):
+            return None
+        target = str(Path(project_dir).absolute())
+        for project in projects.values():
+            if str(Path(project.project_dir).absolute()) == target:
+                return project
+        return None
+
     def store(self, data: NoneBotProjectMeta) -> None:
         if not PROJECT_DATA_PATH.exists():
             file = NoneBotProjectList(root={self.project_id: data})
