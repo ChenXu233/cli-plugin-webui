@@ -62,7 +62,7 @@ nb self install nb-cli-plugin-webui
 使用 Docker 运行
 
 ```shell
-docker pull nonebot/cil-plugin-webui:latest
+docker pull nonebot/cli-plugin-webui:latest
 ```
 
 Docker 镜像可以选择以下版本:
@@ -91,7 +91,138 @@ docker run -it --rm -p 8080:8080 -v ./:/app nonebot/cli-plugin-webui:latest --he
 
 ## 开发
 
-待补充......
+### 环境要求
+
+- Python 3.10+
+- Node.js 18+
+- pnpm 8+（前端包管理）
+- pdm（Python 包管理）
+- nb-cli（NoneBot 命令行工具）
+
+### 项目结构
+
+```
+cli-plugin-webui/
+├── frontend/              # Vue 3 前端应用
+│   ├── src/               # 前端源码
+│   ├── package.json       # 前端依赖配置
+│   └── vite.config.ts     # Vite 配置
+├── nb_cli_plugin_webui/   # Python 后端
+│   ├── app/               # FastAPI 应用
+│   ├── cli/               # CLI 命令
+│   ├── dist/              # 构建产物
+│   └── server.py          # 服务器入口
+├── script/                # 脚本文件
+├── testbot/               # 测试机器人
+├── pyproject.toml         # Python 项目配置
+└── package.json           # pnpm 工作区配置
+```
+
+### 开发命令
+
+#### 快速启动（推荐）
+
+```bash
+# 安装 pdm 和 pnpm 后，一键启动前后端开发服务器
+nb ui dev
+
+# 指定后端服务器主机和端口
+nb ui dev -h 127.0.0.1 -p 3000
+```
+
+`nb ui dev` 命令会同时启动：
+
+- 前端 Vite 开发服务器（热重载，默认端口 5173）
+- 后端 FastAPI 服务器（自动重载，默认端口 8080）
+- 自动打开浏览器访问 WebUI
+
+**参数说明：**
+
+- `-h` / `--host`：配置后端服务器监听地址（默认 `0.0.0.0`）
+- `-p` / `--port`：配置后端服务器监听端口（默认 `8080`）
+- 前端开发服务器端口（默认 5173）由 Vite 自动管理，暂不支持通过命令行配置
+
+**开发模式特性：**
+
+- 后端自动启用调试模式（`debug=1`）
+- 自动生成 API 文档（`/docs`）
+- 前端自动代理 `/api` 请求到后端服务器
+
+#### 前端开发
+
+```bash
+# 进入前端目录
+cd frontend
+
+# 安装依赖
+pnpm install
+
+# 启动开发服务器
+pnpm dev
+
+# 构建生产版本
+pnpm build
+
+# 代码格式化
+pnpm format
+
+# 代码检查
+pnpm lint
+```
+
+#### 后端开发
+
+```bash
+# 安装开发依赖
+pdm install -G dev
+
+# 启动后端开发服务器
+pdm run dev-backend
+
+# 启动前端开发服务器
+pdm run dev-frontend
+
+# 生成 OpenAPI 客户端
+pdm run generate
+```
+
+### 代码风格
+
+项目使用以下工具确保代码风格一致：
+
+- **Python**: black (格式化) + isort (导入排序) + flake8 (检查)
+- **前端**: prettier (格式化) + eslint (检查)
+- **提交信息**: nonemoji (emoji 前缀)
+
+### 预提交钩子
+
+项目配置了 pre-commit 钩子，会在提交时自动运行代码格式化和检查：
+
+```bash
+# 安装预提交钩子
+pre-commit install
+
+# 手动运行所有钩子
+pre-commit run --all-files
+```
+
+### 提交规范
+
+提交信息需要使用 emoji 前缀，格式为：
+
+```
+:emoji: type(scope): description
+```
+
+常用 emoji：
+
+- ✨ `:sparkles:` - 新功能
+- 🐛 `:bug:` - Bug 修复
+- 📝 `:memo:` - 文档更新
+- 🔧 `:wrench:` - 配置变更
+- 🚨 `:rotating_light:` - 代码风格修复
+- ♻️ `:recycle:` - 代码重构
+- ⬆️ `:arrow_up:` - 依赖更新
 
 ## 补充
 
