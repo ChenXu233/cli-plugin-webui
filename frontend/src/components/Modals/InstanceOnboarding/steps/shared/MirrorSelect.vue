@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useCreateBotStore } from ".";
+import { useOnboardingStore } from "../../index";
 
-const store = useCreateBotStore();
+const store = useOnboardingStore();
 
 interface MirrorItem {
   abbr: string;
@@ -76,8 +76,10 @@ const mirrors: MirrorItem[] = [
     </div>
 
     <div class="flex justify-between items-center">
-      <div class="btn btn-sm btn-primary text-base-100" @click="store.step--">上一步</div>
-      <div
+      <button class="btn btn-sm btn-primary text-base-100" @click="store.step--">
+        上一步
+      </button>
+      <button
         :class="{
           'btn btn-sm btn-primary text-base-100': true,
           'btn-disabled': !store.pythonMirror.length,
@@ -85,7 +87,7 @@ const mirrors: MirrorItem[] = [
         @click="store.step++"
       >
         下一步
-      </div>
+      </button>
     </div>
   </div>
 </template>

@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useCreateBotStore } from ".";
+import { useOnboardingStore } from "../..";
 
-const store = useCreateBotStore();
+const store = useOnboardingStore();
 
 interface OptionItem {
   value: "bootstrap" | "simple";

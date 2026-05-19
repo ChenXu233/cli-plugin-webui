@@ -13,20 +13,11 @@ export interface NavItem {
   routeData: RouteRecordRawRebuild;
 }
 
-// WebUI default routes
-export const defaultRoutes: NavItem[] = [
-  {
-    googleIcon: "team_dashboard",
-    name: "概览",
-    routeData: {
-      path: "/dashboard",
-      name: "Dashboard",
-      component: () => import("@/views/Dashboard/DashboardIndex.vue"),
-    },
-  },
+// 实例范围菜单项（有实例时显示）
+export const instanceRoutes: NavItem[] = [
   {
     googleIcon: "settings_applications",
-    name: "实例操作",
+    name: "操作",
     routeData: {
       path: "/operation",
       name: "Operation",
@@ -34,30 +25,37 @@ export const defaultRoutes: NavItem[] = [
     },
   },
   {
-    googleIcon: "extension",
-    name: "拓展商店",
-    routeData: {
-      path: "/store",
-      name: "Store",
-      component: () => import("@/views/Store/StoreIndex.vue"),
-    },
-  },
-  {
-    googleIcon: "power",
-    name: "拓展管理",
-    routeData: {
-      path: "/extension",
-      name: "ExtensionManage",
-      component: () => import("@/views/ExtensionManage/ExtensionManageIndex.vue"),
-    },
-  },
-  {
     googleIcon: "settings",
-    name: "实例设置",
+    name: "设置",
     routeData: {
       path: "/settings",
       name: "Settings",
       component: () => import("@/views/Settings/SettingsIndex.vue"),
     },
   },
+  {
+    googleIcon: "extension",
+    name: "拓展",
+    routeData: {
+      path: "/extensions",
+      name: "Extensions",
+      component: () => import("@/views/Extensions/ExtensionsIndex.vue"),
+    },
+  },
 ];
+
+// 首页菜单项（无实例时显示）
+export const homeRoutes: NavItem[] = [
+  {
+    googleIcon: "home",
+    name: "首页",
+    routeData: {
+      path: "/",
+      name: "Home",
+      component: () => import("@/views/Home/HomeIndex.vue"),
+    },
+  },
+];
+
+// 兼容：所有路由的扁平列表
+export const defaultRoutes: NavItem[] = [...homeRoutes, ...instanceRoutes];

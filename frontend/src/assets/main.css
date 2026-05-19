@@ -3,3 +3,29 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+  /* 优化默认 Tooltip 的样式适配更现代的 UI 设计语言 */
+  .tooltip:before {
+    @apply shadow-lg rounded-md px-3 py-1.5 text-xs font-semibold backdrop-blur-md border border-base-content/10;
+    background-color: oklch(var(--b1) / 0.8) !important;
+    color: oklch(var(--bc)) !important;
+  }
+
+  .tooltip:after {
+    border-top-color: oklch(var(--b1) / 0.8) !important;
+    /* 调整小箭头的颜色跟随主题 */
+  }
+
+  .tooltip-bottom:after {
+    border-bottom-color: oklch(var(--b1) / 0.8) !important;
+  }
+
+  .tooltip-left:after {
+    border-left-color: oklch(var(--b1) / 0.8) !important;
+  }
+
+  .tooltip-right:after {
+    border-right-color: oklch(var(--b1) / 0.8) !important;
+  }
+}

@@ -2,9 +2,9 @@
 import { ref } from "vue";
 import { limitContentShow } from "@/client/utils";
 import FolderSelect from "@/components/Modals/Global/FolderSelect.vue";
-import { useCreateBotStore } from ".";
+import { useOnboardingStore } from "../..";
 
-const store = useCreateBotStore();
+const store = useOnboardingStore();
 
 const folderSelectModal = ref<InstanceType<typeof FolderSelect> | null>();
 

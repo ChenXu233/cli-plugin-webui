@@ -2,9 +2,9 @@
 import { onMounted, ref } from "vue";
 import { StoreService, type Adapter } from "@/client/api";
 import ItemSelect from "./ItemSelect.vue";
-import { useCreateBotStore } from ".";
+import { useOnboardingStore } from "../..";
 
-const store = useCreateBotStore();
+const store = useOnboardingStore();
 
 const adapterList = ref<Adapter[]>([]);
 const isLoading = ref(true);

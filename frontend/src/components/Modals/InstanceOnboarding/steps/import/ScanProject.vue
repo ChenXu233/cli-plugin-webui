@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { ProjectService } from "@/client/api";
 import { ref } from "vue";
-import { useAddBotStore } from ".";
+import { useOnboardingStore } from "../..";
 
-const store = useAddBotStore();
+const store = useOnboardingStore();
 
 const inputValue = ref("");
 
@@ -30,7 +30,7 @@ const search = async () => {
     store.pluginDirs = detail.plugin_dirs;
     store.projectPath = inputValue.value;
 
-    store.searchBotSuccess = true;
+    store.searchSuccess = true;
     store.warningMessage = "";
     inputValue.value = "";
   }
@@ -40,7 +40,7 @@ const search = async () => {
 <template>
   <div class="flex flex-col items-center gap-8">
     <div
-      v-if="!store.searchBotSuccess"
+      v-if="!store.searchSuccess"
       class="flex flex-col justify-center gap-4 w-full max-w-xs"
     >
       <div class="form-control">
@@ -130,9 +130,9 @@ const search = async () => {
 
     <div class="w-full flex items-center">
       <button
-        v-if="store.searchBotSuccess"
+        v-if="store.searchSuccess"
         class="btn btn-sm"
-        @click="((store.searchBotSuccess = false), store.reset())"
+        @click="((store.searchSuccess = false), store.reset())"
       >
         重新扫描
       </button>
@@ -147,7 +147,7 @@ const search = async () => {
         <button
           :class="{
             'btn btn-sm btn-primary text-base-100': true,
-            'btn-disabled': !store.searchBotSuccess,
+            'btn-disabled': !store.searchSuccess,
           }"
           @click="store.step++"
         >

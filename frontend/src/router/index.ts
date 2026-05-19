@@ -14,10 +14,23 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: "/",
-        name: "Welcome",
-        component: () => import("@/views/WelcomeItem.vue"),
+        name: "Home",
+        component: () => import("@/views/Home/HomeIndex.vue"),
       },
     ],
+  },
+  // 旧路由重定向
+  {
+    path: "/store",
+    redirect: "/extensions",
+  },
+  {
+    path: "/extension",
+    redirect: "/extensions",
+  },
+  {
+    path: "/dashboard",
+    redirect: "/",
   },
   {
     path: "/:pathMatched(.*)*",

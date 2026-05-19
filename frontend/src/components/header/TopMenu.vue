@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import router from "@/router";
-import { useCustomStore, useToastStore } from "@/stores";
+import { useCustomStore } from "@/stores";
+import { useRouter } from "vue-router";
 import NotificationItem from "@/components/header/NotificationItem.vue";
-import BotChoose from "@/components/header/BotChoose.vue";
-import StatusItem from "@/components/header/StatusItem.vue";
+import LanguageSwitch from "@/components/header/LanguageSwitch.vue";
 import WebUISettings from "@/components/header/WebUISettings.vue";
+import { useToastStore } from "@/stores";
 
 const store = useCustomStore();
 const toast = useToastStore();
+const router = useRouter();
 
 const logout = () => {
   localStorage.clear();
@@ -27,9 +28,8 @@ const logout = () => {
       </button>
     </div>
 
-    <div class="h-full flex justify-end items-center gap-4">
-      <StatusItem />
-
+    <div class="h-full flex justify-end items-center gap-2">
+      <!-- 主题切换 -->
       <button class="btn btn-sm btn-ghost btn-square">
         <label class="swap swap-rotate">
           <input type="checkbox" />
@@ -49,11 +49,16 @@ const logout = () => {
         </label>
       </button>
 
+      <!-- 语言切换 -->
+      <LanguageSwitch />
+
+      <!-- 通知 -->
       <NotificationItem />
 
-      <BotChoose />
-
+      <!-- WebUI 设置 -->
       <WebUISettings />
+
+      <!-- 登出 -->
       <button class="btn btn-sm btn-ghost btn-square">
         <span class="material-symbols-outlined text-primary" @click="logout()">
           logout

@@ -1,11 +1,17 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { useRoute } from "vue-router";
-import { useCustomStore, useViewHistoryRecorderStore } from "@/stores";
-import { defaultRoutes, type NavItem } from "@/router/client";
+import { useCustomStore, useViewHistoryRecorderStore, useNoneBotStore } from "@/stores";
+import { instanceRoutes, homeRoutes, type NavItem } from "@/router/client";
 
 const currentRoute = useRoute();
 const store = useViewHistoryRecorderStore();
 const customStore = useCustomStore();
+const nonebotStore = useNoneBotStore();
+
+const navItems = computed(() => {
+  return nonebotStore.selectedBot ? instanceRoutes : homeRoutes;
+});
 
 const recordView = (navItem: NavItem) => {
   if (
@@ -18,9 +24,9 @@ const recordView = (navItem: NavItem) => {
 </script>
 
 <template>
-  <ul class="h-full pt-8 px-0 menu rounded-box">
+  <ul class="h-full pt-4 px-0 menu rounded-box">
     <li
-      v-for="navItem in defaultRoutes"
+      v-for="navItem in navItems"
       :key="navItem.name"
       class="mb-2"
       @click="recordView(navItem)"

@@ -2,9 +2,9 @@
 import { StoreService, type Driver } from "@/client/api";
 import { onMounted, ref } from "vue";
 import ItemSelect from "./ItemSelect.vue";
-import { useCreateBotStore } from ".";
+import { useOnboardingStore } from "../..";
 
-const store = useCreateBotStore();
+const store = useOnboardingStore();
 
 const driverList = ref<Driver[]>([]);
 const isLoading = ref(true);
