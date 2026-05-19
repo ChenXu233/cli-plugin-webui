@@ -1,9 +1,18 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import SideMenu from "@/components/sidebar/SideMenu.vue";
 import router from "@/router";
 import { useCustomStore } from "@/stores";
 
 const store = useCustomStore();
+
+const sidebarClasses = computed(() => ({
+  "fixed lg:relative top-0 left-0 h-full flex flex-col justify-between py-2 px-4 transition-all": true,
+  "overflow-visible lg:overflow-hidden": !store.menuMinify,
+  "lg:overflow-visible": store.menuMinify,
+  "bg-base-200 lg:bg-base-200/50 shadow-md": true,
+  "lg:!w-20": store.menuMinify,
+}));
 </script>
 
 <template>
@@ -18,16 +27,9 @@ const store = useCustomStore();
     </Transition>
 
     <div
-      :class="{
-        'fixed lg:relative top-0 left-0 h-full flex flex-col justify-between py-2 px-4 transition-all': true,
-        'overflow-visible lg:overflow-hidden': !store.menuMinify,
-        'lg:overflow-visible': store.menuMinify,
-        '-!translate-x-full lg:!translate-x-0 bg-base-200 lg:bg-base-200/50 shadow-md':
-          !store.menuShow,
-        '!-translate-x-0 bg-base-200 lg:bg-base-200/50 shadow-md': store.menuShow,
-        'lg:!w-20': store.menuMinify,
-      }"
-      class="w-full md:w-1/2 lg:w-72"
+      :class="sidebarClasses"
+      :style="{ transform: store.menuShow ? 'translateX(0)' : 'translateX(-100%)' }"
+      class="w-full md:w-1/2 lg:w-72 lg:!transform-none"
     >
       <div
         :class="{
@@ -61,7 +63,7 @@ const store = useCustomStore();
           </div>
         </div>
 
-        <div class="flex items-center">
+        <div class="flex items-center ml-auto">
           <button
             class="btn btn-sm btn-square btn-ghost flex items-center justify-center lg:hidden"
             @click="store.toggleMenuShow()"

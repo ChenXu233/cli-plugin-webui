@@ -18,7 +18,14 @@ const logout = () => {
 
 <template>
   <div class="relative h-16 px-4 xl:px-8 py-2 flex justify-end items-center bg-base-100">
-    <div class="w-full"></div>
+    <div class="w-full">
+      <button
+        class="btn btn-sm btn-ghost btn-square lg:hidden"
+        @click="store.toggleMenuShow()"
+      >
+        <span class="material-symbols-outlined"> menu </span>
+      </button>
+    </div>
 
     <div class="h-full flex justify-end items-center gap-4">
       <StatusItem />
