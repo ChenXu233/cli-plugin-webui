@@ -32,17 +32,33 @@ class SpecialTypeJSONEncoder(json.JSONEncoder):
 
 class AppConfig(BaseModel):
     base_dir: str = Field(
-        default_factory=lambda: (
-            str(Path.cwd() / "/projects") if "WEBUI_BUILD" in os.environ else str()
+        default_factory=lambda: os.getenv(
+            "NB_WEBUI_BASE_DIR",
+            str(Path.cwd() / "/projects") if "WEBUI_BUILD" in os.environ else str(),
         ),
         description="基础目录，创建实例将由此开始",
     )
-    host: str = Field(default="localhost", description="主机名")
-    port: str = Field(default="12345", description="端口号")
-    debug: int = Field(default=0, description="是否开启调试模式")
-    enable_api_document: bool = Field(default=False, description="是否开启 API 文档")
+    host: str = Field(
+        default_factory=lambda: os.getenv("NB_WEBUI_HOST", "localhost"),
+        description="主机名",
+    )
+    port: str = Field(
+        default_factory=lambda: os.getenv("NB_WEBUI_PORT", "12345"),
+        description="端口号",
+    )
+    debug: int = Field(
+        default_factory=lambda: int(os.getenv("NB_WEBUI_DEBUG", "0")),
+        description="是否开启调试模式",
+    )
+    enable_api_document: bool = Field(
+        default_factory=lambda: os.getenv("NB_WEBUI_API_DOCUMENT", "0") == "1",
+        description="是否开启 API 文档",
+    )
 
-    log_level: LogLevels = Field(default=LogLevels.INFO, description="日志等级")
+    log_level: LogLevels = Field(
+        default_factory=lambda: LogLevels(os.getenv("NB_WEBUI_LOG_LEVEL", "INFO")),
+        description="日志等级",
+    )
     log_is_store: bool = Field(default=False, description="是否存储日志")
 
     secret_key: SecretStr = Field(
@@ -86,11 +102,16 @@ class AppConfig(BaseModel):
 
     def check_necessary_config(self) -> bool:
         return bool(
-            self.base_dir and self.secret_key and self.hashed_token and self.salt
+            self.base_dir
+            and self.secret_key.get_secret_value()
+            and self.hashed_token.get_secret_value()
+            and self.salt.get_secret_value()
         )
 
     def get_description(self, field_name: str) -> str | None:
-        return self.__class__.model_fields[field_name].description
+        if field_name not in AppConfig.model_fields:
+            return None
+        return AppConfig.model_fields[field_name].description
 
 
 class ConfigParser(AppConfig):

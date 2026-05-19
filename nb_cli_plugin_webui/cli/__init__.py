@@ -36,9 +36,6 @@ async def _ensure_config():
     _salt = salt.gen_salt()
     _token = generate_complexity_string(use_digits=True, use_punctuation=True)
     default_config = AppConfig(
-        base_dir=str(),
-        host="localhost",
-        port="12345",
         secret_key=SecretStr(
             generate_complexity_string(32, use_digits=True, use_punctuation=True)
         ),
@@ -109,8 +106,24 @@ async def webui(ctx: click.Context):
 
 
 @webui.command(help=_("Run WebUI."))
+@click.option(
+    "-h",
+    "--host",
+    type=str,
+    show_default=True,
+    help=_("The host required to access NB CLI UI."),
+    default=None,
+)
+@click.option(
+    "-p",
+    "--port",
+    type=int,
+    show_default=True,
+    help=_("The port required to access NB CLI UI."),
+    default=None,
+)
 @run_async
-async def run():
+async def run(host: str, port: int):
     if not STATIC_PATH.exists():
         click.secho(
             _("WebUI dist directory not found, please reinstall to fix."), fg="red"
@@ -121,24 +134,52 @@ async def run():
 
     from nb_cli_plugin_webui import server
 
-    host = Config.host
-    port = int(Config.port)
+    # CLI 参数覆盖配置文件
+    if host is not None:
+        Config.host = host
+    if port is not None:
+        Config.port = str(port)
+
+    _host = Config.host
+    _port = int(Config.port)
 
     try:
-        webbrowser.open(f"http://{host}:{port}/")
+        webbrowser.open(f"http://{_host}:{_port}/")
     except webbrowser.Error:
         pass
-    await server.run_server(host, port)
+    await server.run_server(_host, _port)
 
 
 @webui.command(help=_("Run frontend dev server with backend."))
+@click.option(
+    "-h",
+    "--host",
+    type=str,
+    show_default=True,
+    help=_("The host required to access NB CLI UI."),
+    default=None,
+)
+@click.option(
+    "-p",
+    "--port",
+    type=int,
+    show_default=True,
+    help=_("The port required to access NB CLI UI."),
+    default=None,
+)
 @run_async
-async def dev():
+async def dev(host: str, port: int):
     _check_dev_environment()
     await _ensure_config()
 
     Config.debug = 1
     Config.enable_api_document = True
+
+    # CLI 参数覆盖配置文件
+    if host is not None:
+        Config.host = host
+    if port is not None:
+        Config.port = str(port)
 
     frontend_path = Path(__file__).parent.parent.parent / "frontend"
     if not frontend_path.exists():
@@ -153,9 +194,16 @@ async def dev():
             fg="red",
         )
         return
+
+    # 将后端配置传递给前端开发服务器
+    frontend_env = os.environ.copy()
+    frontend_env["NB_WEBUI_HOST"] = Config.host
+    frontend_env["NB_WEBUI_PORT"] = Config.port
+
     frontend_proc = subprocess.Popen(
         [pnpm_path, "dev"],
         cwd=frontend_path,
+        env=frontend_env,
     )
 
     click.secho(_("Starting backend server..."), fg="green")
