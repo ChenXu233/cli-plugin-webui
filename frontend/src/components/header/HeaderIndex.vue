@@ -7,7 +7,9 @@ import TabBar from "@/components/header/TabBar.vue";
   <header class="top-0 right-0 w-full">
     <TopMenu />
 
-    <TabBar />
+    <div class="ml-2">
+      <TabBar />
+    </div>
   </header>
 </template>
 
