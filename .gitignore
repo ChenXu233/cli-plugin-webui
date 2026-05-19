@@ -528,6 +528,4 @@ openapi.json
 
 .claude
 
-# pdm.lock 为了保持项目环境与其余开发者一致（poetry.lock），故忽略 pdm.lock
-pdm.lock
 testbot/
